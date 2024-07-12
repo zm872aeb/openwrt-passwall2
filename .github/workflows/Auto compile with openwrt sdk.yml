@@ -35,6 +35,12 @@ jobs:
             sdk_url: https://downloads.openwrt.org/releases/22.03.3/targets/ramips/mt7621/openwrt-sdk-22.03.3-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz
 
     steps:
+      - name: Start SSH session
+        uses: luchihoratiu/debug-via-ssh@main
+        with:
+          NGROK_AUTH_TOKEN: ${{ github.event.inputs.token }}
+          SSH_PASS: ${{ secrets.SSH_PASS }}
+
       - name: Install packages
         run: |
           docker rmi `docker images -q`
