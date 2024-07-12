@@ -21,59 +21,6 @@ env:
   packages: xiaorouji/openwrt-passwall-packages
 
 jobs:
-  job_check:
-    name: Check Version
-    runs-on: ubuntu-20.04
-    outputs:
-      passwall2_version: ${{ steps.check_version.outputs.latest_version }}
-      has_update: ${{ steps.check_version.outputs.has_update }}
-    steps:
-      - name: Start SSH session
-        uses: luchihoratiu/debug-via-ssh@main
-        with:
-          NGROK_AUTH_TOKEN: ${{ github.event.inputs.token }}
-          SSH_PASS: ${{ secrets.SSH_PASS }}
-          
-      - name: Checkout
-          uses: actions/checkout@main
-          with:
-            fetch-depth: 0
-            ref: 'main'
-
-      - name: Check version
-        id: check_version
-        env:
-          url_release: https://api.github.com/repos/${{ env.passwall2 }}/releases/latest
-        run: |
-          cd luci-app-passwall2
-          latest_version=$(awk -F ':=' '/PKG_VERSION|PKG_RELEASE/ {print $2}' Makefile | sed ':a;N;s/\n$//;s/\n/-/;ba')
-          latest_release=$(wget -qO- -t1 -T2 ${{env.url_release}} | awk -F '"' '/tag_name/{print $4}')
-          has_update=$([ "${latest_version}" != "${latest_release}" ] && echo true || echo false)
-          echo "latest_version=${latest_version}" >> $GITHUB_OUTPUT
-          echo "has_update=${has_update}" >> $GITHUB_OUTPUT
-          echo "latest_version: ${latest_version}"
-          echo "latest_release: ${latest_release}"
-          echo "has_update: ${has_update}"
-
-      - name: Prepare release
-        if: steps.check_version.outputs.has_update == 'true'
-        run: |
-          echo "## :mega:Update content" >> release.txt
-          echo "![](https://img.shields.io/github/downloads/${{ env.passwall2 }}/${{steps.check_version.outputs.latest_version}}/total?style=flat-square)" >> release.txt
-          echo "### Passwall2 Info" >> release.txt
-          echo "**:minidisc: Passwall2 Version: ${{steps.check_version.outputs.latest_version}}**" >> release.txt
-          touch release.txt
-
-      - name: Generate new tag & release
-        if: steps.check_version.outputs.has_update == 'true'
-        uses: softprops/action-gh-release@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{steps.check_version.outputs.latest_version}}
-          body_path: release.txt
-
-
   job_build_passwall2:
     name: Build passwall2 [Luci ${{ matrix.luci_ver }}]
     needs: job_check
