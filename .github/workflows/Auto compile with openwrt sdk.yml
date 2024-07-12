@@ -4,7 +4,6 @@
 #
 name: "Auto compile with openwrt sdk"
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       token:
@@ -29,16 +28,16 @@ jobs:
       passwall2_version: ${{ steps.check_version.outputs.latest_version }}
       has_update: ${{ steps.check_version.outputs.has_update }}
     steps:
-    - name: Start SSH session
-      uses: luchihoratiu/debug-via-ssh@main
-      with:
-        NGROK_AUTH_TOKEN: ${{ github.event.inputs.token }}
-        SSH_PASS: ${{ secrets.SSH_PASS }}
-      - name: Checkout
-        uses: actions/checkout@main
+      - name: Start SSH session
+        uses: luchihoratiu/debug-via-ssh@main
         with:
-          fetch-depth: 0
-          ref: 'main'
+          NGROK_AUTH_TOKEN: ${{ github.event.inputs.token }}
+          SSH_PASS: ${{ secrets.SSH_PASS }}
+        - name: Checkout
+          uses: actions/checkout@main
+          with:
+            fetch-depth: 0
+            ref: 'main'
 
       - name: Check version
         id: check_version
